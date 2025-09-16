@@ -1,7 +1,6 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import ru.kata.spring.boot_security.demo.entity.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
+
 
 
 @Controller
@@ -24,7 +24,7 @@ public class UserController {
 
     @GetMapping("/user")
     public String showUserPage(@AuthenticationPrincipal UserDetails currentUser, Model model) {
-        Object user = userService.getUserByEmail(currentUser.getUsername()); // уже User, без кастов
+        User user = userService.getUserByEmail(currentUser.getUsername());
         model.addAttribute("user", user);
         return "user/user-page";
     }
