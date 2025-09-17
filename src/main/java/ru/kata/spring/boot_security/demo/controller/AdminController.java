@@ -5,11 +5,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import ru.kata.spring.boot_security.demo.dao.RoleRepository;
 import ru.kata.spring.boot_security.demo.entity.Role;
 import ru.kata.spring.boot_security.demo.entity.User;
 import ru.kata.spring.boot_security.demo.service.AdminService;
-
+import ru.kata.spring.boot_security.demo.service.RoleService;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,13 +19,13 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final AdminService adminService;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminController(AdminService adminService, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AdminController(AdminService adminService, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.adminService = adminService;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -35,7 +34,7 @@ public class AdminController {
 
         List<User> allUsers = adminService.getAllUsers();
         model.addAttribute("allUsers", allUsers);
-        model.addAttribute("allRoles", roleRepository.findAll());
+        model.addAttribute("allRoles", roleService.getAllRoles());
         model.addAttribute("newUser", new User());
 
         return "admin/all-users";
@@ -70,7 +69,7 @@ public class AdminController {
 
         Set<Role> userRoles = roleIds.stream()
                 .map(Long::parseLong)
-                .map(roleRepository::findById)
+                .map(roleService::getRoleById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toSet());
@@ -98,7 +97,7 @@ public class AdminController {
 
         Set<Role> userRoles = roleIds.stream()
                 .map(Long::parseLong)
-                .map(roleRepository::findById)
+                .map(roleService::getRoleById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toSet());

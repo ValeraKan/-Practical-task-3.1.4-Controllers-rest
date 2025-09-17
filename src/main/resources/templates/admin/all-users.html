@@ -7,22 +7,35 @@
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 56px; /* высота navbar */
         }
 
         .navbar {
             background-color: #343a40;
             padding: 0.5rem 1rem;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1030; /* поверх sidebar */
         }
 
         .user-info {
-            color: rgba(255, 255, 255, 0.9);
             font-size: 0.9rem;
+        }
+
+        .user-info strong, .user-info span {
+            color: #fff;
         }
 
         .sidebar {
             background-color: #e9ecef;
             height: 100vh;
             padding-top: 1rem;
+            position: fixed;
+            top: 56px; /* под navbar */
+            left: 0;
+            width: 16.6667%; /* col-md-2 */
+            overflow-y: auto;
         }
 
         .sidebar .nav-link {
@@ -37,6 +50,7 @@
         }
 
         .content-area {
+            margin-left: 16.6667%; /* под sidebar */
             padding: 1.5rem;
         }
 
@@ -60,57 +74,48 @@
             background: white;
             padding: 1.5rem;
             border-radius: 0.5rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
         }
 
-        .form-label {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
+        .form-label { font-weight: 500; margin-bottom: 0.5rem; }
 
-        .tab-content {
-            padding: 1rem 0;
-        }
+        .tab-content { padding: 1rem 0; }
 
-        .modal-content {
-            border-radius: 0.5rem;
-        }
+        .modal-content { border-radius: 0.5rem; }
     </style>
 </head>
 <body>
 <!-- Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-            <span class="user-info">
-                <span th:if="${#authentication != null}">
-                    <span th:text="${#authentication.name}">admin@mail.ru</span> with roles:
-                    <span th:text="${#authentication.authorities}">ADMIN USER</span>
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #343a40;">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div class="user-info" style="color: rgba(255, 255, 255, 0.95);">
+            <span th:if="${#authentication != null}">
+                <strong th:text="${#strings.toUpperCase(#authentication.name)}" style="color: #fff;">ADMIN@MAIL.RU</strong> with roles:
+                <span th:each="role, iterStat : ${#authentication.authorities}">
+                    <span th:text="${#strings.toUpperCase(role)}" style="color: #f8f9fa;">ROLE_ADMIN</span>
+                    <span th:if="${!iterStat.last}">, </span>
                 </span>
             </span>
+        </div>
         <a th:href="@{/logout}" class="btn btn-outline-light btn-sm">Logout</a>
     </div>
 </nav>
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-2 sidebar p-0">
-            <div class="p-3">
-                <h5 class="mb-3">Admin panel</h5>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#" id="sidebar-users-tab">Users table</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="sidebar-new-user-tab">New User</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+<!-- Sidebar -->
+<div class="sidebar">
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link active" href="/admin">Admin</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/user">User</a>
+        </li>
+    </ul>
+</div>
 
         <!-- Main Content -->
         <div class="col-md-10 content-area">
-            <h4 class="mb-4">All users</h4>
+            <h4 class="mb-4">Admin panel</h4>
 
             <ul class="nav nav-tabs mb-4" id="admin-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -145,9 +150,9 @@
                                 <td th:text="${user.name}"></td>
                                 <td th:text="${user.email}"></td>
                                 <td>
-    <span th:each="role, iterStat : ${user.roles}">
-        <span th:text="${role.name}"></span><span th:if="${!iterStat.last}">, </span>
-    </span>
+                                    <span th:each="role, iterStat : ${user.roles}">
+                                        <span th:text="${role.name}"></span><span th:if="${!iterStat.last}">, </span>
+                                    </span>
                                 </td>
                                 <td>
                                     <button class="btn btn-info btn-action" data-bs-toggle="modal"
@@ -184,29 +189,24 @@
                                 <input type="text" class="form-control" id="user-name" th:field="*{name}"
                                        placeholder="Enter name">
                             </div>
-
                             <div class="mb-3">
                                 <label for="user-email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="user-email" th:field="*{email}"
                                        placeholder="Enter email">
                             </div>
-
                             <div class="mb-3">
                                 <label for="user-password" class="form-label">Password</label>
                                 <input type="password" class="form-control" id="user-password" th:field="*{password}"
                                        placeholder="Enter password">
                             </div>
-
                             <div class="mb-4">
                                 <label for="user-roles" class="form-label">Role</label>
                                 <select class="form-select" id="user-roles" th:field="*{roles}" multiple>
-                                    <option th:each="role : ${allRoles}"
-                                            th:value="${role.id}"
+                                    <option th:each="role : ${allRoles}" th:value="${role.id}"
                                             th:text="${role.name}"></option>
                                 </select>
                                 <div class="form-text">Hold Ctrl to select multiple roles</div>
                             </div>
-
                             <button type="submit" class="btn btn-success">Add new user</button>
                         </form>
                     </div>
@@ -227,34 +227,23 @@
             <div class="modal-body">
                 <form th:action="@{/admin/updateUser}" method="post" id="editUserForm">
                     <input type="hidden" id="editUserId" name="id">
-
-                    <div class="mb-3">
-                        <label class="form-label">ID</label>
-                        <input type="text" class="form-control" id="editUserIdDisplay" readonly>
-                    </div>
-
                     <div class="mb-3">
                         <label class="form-label">Name</label>
                         <input type="text" class="form-control" id="editUserName" name="name">
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email" class="form-control" id="editUserEmail" name="email">
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" class="form-control" id="editUserPassword" name="password"
                                placeholder="Leave blank to keep current password">
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label">Role</label>
+                        <label class="form-label">Roles</label>
                         <select class="form-select" id="editUserRoles" name="roles" multiple>
-                            <option th:each="role : ${allRoles}"
-                                    th:value="${role.id}"
-                                    th:text="${role.name}"></option>
+                            <option th:each="role : ${allRoles}" th:value="${role.id}" th:text="${role.name}"></option>
                         </select>
                     </div>
                 </form>
@@ -262,7 +251,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary"
-                        onclick="document.getElementById('editUserForm').submit();">Edit
+                        onclick="document.getElementById('editUserForm').submit();">Save changes
                 </button>
             </div>
         </div>
@@ -279,18 +268,10 @@
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete this user?</p>
-                <div class="mb-2">
-                    <strong>ID:</strong> <span id="deleteUserId"></span>
-                </div>
-                <div class="mb-2">
-                    <strong>Name:</strong> <span id="deleteUserName"></span>
-                </div>
-                <div class="mb-2">
-                    <strong>Email:</strong> <span id="deleteUserEmail"></span>
-                </div>
-                <div class="mb-2">
-                    <strong>Roles:</strong> <span id="deleteUserRoles"></span>
-                </div>
+                <div class="mb-2"><strong>ID:</strong> <span id="deleteUserId"></span></div>
+                <div class="mb-2"><strong>Name:</strong> <span id="deleteUserName"></span></div>
+                <div class="mb-2"><strong>Email:</strong> <span id="deleteUserEmail"></span></div>
+                <div class="mb-2"><strong>Roles:</strong> <span id="deleteUserRoles"></span></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -305,19 +286,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Tab switching functionality
-    document.getElementById('sidebar-users-tab').addEventListener('click', function (e) {
-        e.preventDefault();
-        const usersTab = new bootstrap.Tab(document.getElementById('users-tab'));
-        usersTab.show();
-    });
-
-    document.getElementById('sidebar-new-user-tab').addEventListener('click', function (e) {
-        e.preventDefault();
-        const newUserTab = new bootstrap.Tab(document.getElementById('newuser-tab'));
-        newUserTab.show();
-    });
-
     // Edit User Modal functionality
     const editUserModal = document.getElementById('editUserModal');
     editUserModal.addEventListener('show.bs.modal', function (event) {
@@ -325,15 +293,23 @@
         const userId = button.getAttribute('data-user-id');
         const userName = button.getAttribute('data-user-name');
         const userEmail = button.getAttribute('data-user-email');
-        const userRoles = button.getAttribute('data-user-roles');
+        const rolesRaw = button.getAttribute('data-user-roles');
 
         document.getElementById('editUserId').value = userId;
-        document.getElementById('editUserIdDisplay').value = userId;
         document.getElementById('editUserName').value = userName;
         document.getElementById('editUserEmail').value = userEmail;
 
-        // Set form action with user ID
-        document.getElementById('editUserForm').action = `/admin/updateUser`;
+        const rolesSelect = document.getElementById('editUserRoles');
+        Array.from(rolesSelect.options).forEach(option => option.selected = false);
+
+        if (rolesRaw) {
+            const rolesArray = rolesRaw.replace(/[\[\]\s]/g, '').split(',');
+            Array.from(rolesSelect.options).forEach(option => {
+                if (rolesArray.includes(option.text)) {
+                    option.selected = true;
+                }
+            });
+        }
     });
 
     // Delete User Modal functionality
@@ -343,26 +319,19 @@
         const userId = button.getAttribute('data-user-id');
         const userName = button.getAttribute('data-user-name');
         const userEmail = button.getAttribute('data-user-email');
-
-        // Разбираем роли из data-user-roles
         const rolesRaw = button.getAttribute('data-user-roles');
-        let roles = [];
-        if (rolesRaw) {
-            // Преобразуем в массив и выводим только имена ролей
-            roles = rolesRaw.replace(/[\[\]]/g, '') // убираем квадратные скобки
-                .split(',')             // делим по запятой
-                .map(r => r.trim())     // убираем пробелы
-                .map(r => r.replace('ROLE_', '')); // убираем префикс ROLE_
-        }
 
         document.getElementById('deleteUserId').textContent = userId;
         document.getElementById('deleteUserName').textContent = userName;
         document.getElementById('deleteUserEmail').textContent = userEmail;
-        document.getElementById('deleteUserRoles').textContent = roles.join(', ');
-        document.getElementById('deleteUserIdInput').value = userId;
 
-        // Set form action
-        document.getElementById('deleteUserForm').action = `/admin/deleteUser`;
+        let roles = [];
+        if (rolesRaw) {
+            roles = rolesRaw.replace(/[\[\]]/g, '').split(',').map(r => r.trim());
+        }
+        document.getElementById('deleteUserRoles').textContent = roles.join(', ');
+
+        document.getElementById('deleteUserIdInput').value = userId;
     });
 </script>
 </body>
