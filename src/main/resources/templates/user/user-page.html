@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>User Information</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
@@ -56,7 +57,6 @@
             padding: 0.75rem;
             border: 1px solid #dee2e6;
         }
-
         /* Sidebar styles */
         .sidebar {
             width: 250px;
@@ -70,10 +70,6 @@
             text-align: center;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 1rem;
-        }
-        .sidebar-header h4 {
-            color: #fff;
-            margin-bottom: 0;
         }
         .sidebar-menu {
             list-style: none;
@@ -115,6 +111,7 @@
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="sidebar-header">
+        <h4>User Panel</h4>
     </div>
     <ul class="sidebar-menu">
         <li>
@@ -129,20 +126,15 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <span class="user-info">
-                <span th:if="${#authentication != null}">
-                    <span th:text="${#authentication.name}">user@mail.ru</span> with roles:
-                    <span th:text="${#authentication.authorities}">USER</span>
-                </span>
-            </span>
-            <a th:href="@{/logout}" class="btn btn-outline-light btn-sm">Logout</a>
+            <span class="user-info" id="userInfo">Loading user info...</span>
+            <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
         </div>
     </nav>
 
     <div class="container">
         <div class="user-container">
-            <h2 class="page-header">User information-page</h2>
-            <h4 class="section-title">About user</h4>
+            <h2 class="page-header">User Information Page</h2>
+            <h4 class="section-title">About User</h4>
 
             <table class="user-table">
                 <thead>
@@ -150,24 +142,44 @@
                     <th>ID</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Role</th>
+                    <th>Role(s)</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr>
-                    <td th:text="${user.id}">3</td>
-                    <td th:text="${user.name}">user</td>
-                    <td th:text="${user.email}">user@mail.ru</td>
-                    <td>
-        <span th:each="role, iterStat : ${user.roles}">
-            <span th:text="${role.name}"></span><span th:if="${!iterStat.last}">, </span>
-        </span>
-                    </td>
-                </tr>
+                <tbody id="userTableBody">
+                <!-- Заполняется JS -->
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            // Получение данных пользователя
+            const response = await fetch("/api/user/profile");
+            if (!response.ok) throw new Error("Ошибка загрузки профиля");
+            const user = await response.json();
+
+            // Отображение таблицы
+            const tbody = document.getElementById("userTableBody");
+            tbody.innerHTML = `
+            <tr>
+                <td>${user.id}</td>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.roles.map(r => r.name).join(", ")}</td>
+            </tr>
+        `;
+
+            // Отображение информации в navbar
+            const userInfo = document.getElementById("userInfo");
+            userInfo.textContent = `${user.email} with roles: ${user.roles.map(r => r.name).join(", ")}`;
+        } catch (err) {
+            console.error(err);
+            document.getElementById("userTableBody").innerHTML = `<tr><td colspan="4">Ошибка загрузки данных</td></tr>`;
+        }
+    });
+</script>
 </body>
 </html>

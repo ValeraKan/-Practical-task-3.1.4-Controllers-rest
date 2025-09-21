@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Login page</title>
@@ -17,26 +17,72 @@
             max-width: 330px;
             padding: 15px;
         }
+        #alert {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body class="text-center">
 
 <main class="form-signin">
-    <form th:action="@{/login}" method="post">
+    <div id="alert"></div>
+
+    <form id="loginForm">
         <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
 
         <div class="form-floating mb-2">
-            <input type="text" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+            <input type="email" class="form-control" id="email" placeholder="name@example.com" required>
             <label for="email">Email address</label>
         </div>
         <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+            <input type="password" class="form-control" id="password" placeholder="Password" required>
             <label for="password">Password</label>
         </div>
 
         <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
     </form>
 </main>
+
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const alertDiv = document.getElementById('alert');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Отменяем стандартную отправку формы
+
+        alertDiv.innerHTML = ''; // Очищаем предыдущие сообщения
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alertDiv.innerHTML = `<div class="alert alert-success">Logged in! Roles: ${data.roles.join(', ')}</div>`;
+
+                // Можно сделать редирект в зависимости от роли
+                if (data.roles.includes('ROLE_ADMIN')) {
+                    window.location.href = '/admin';
+                } else if (data.roles.includes('ROLE_USER')) {
+                    window.location.href = '/user';
+                } else {
+                    window.location.href = '/';
+                }
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+            }
+        } catch (error) {
+            alertDiv.innerHTML = `<div class="alert alert-danger">Network error. Try again.</div>`;
+        }
+    });
+</script>
 
 </body>
 </html>

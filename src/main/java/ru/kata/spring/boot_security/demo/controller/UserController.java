@@ -1,18 +1,18 @@
 package ru.kata.spring.boot_security.demo.controller;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.dto.UserDTO;
 import ru.kata.spring.boot_security.demo.entity.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
+import java.util.List;
+import java.util.stream.Collectors;
 
-
-@Controller
+@RestController
+@RequestMapping("/api/user")
 public class UserController {
 
     private final UserService userService;
@@ -22,10 +22,16 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/user")
-    public String showUserPage(@AuthenticationPrincipal UserDetails currentUser, Model model) {
+    @GetMapping("/profile")
+    public UserDTO getUserProfile(@AuthenticationPrincipal UserDetails currentUser) {
         User user = userService.getUserByEmail(currentUser.getUsername());
-        model.addAttribute("user", user);
-        return "user/user-page";
+        return convertToDTO(user);
+    }
+
+    private UserDTO convertToDTO(User user) {
+        List<String> roles = user.getRoles().stream()
+                .map(r -> r.getName())
+                .collect(Collectors.toList());
+        return new UserDTO(user.getId(), user.getName(), user.getEmail(), roles);
     }
 }
