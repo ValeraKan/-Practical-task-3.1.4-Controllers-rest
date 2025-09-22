@@ -34,7 +34,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
         List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .map(role -> new SimpleGrantedAuthority(
+                        role.getName().startsWith("ROLE_") ? role.getName() : "ROLE_" + role.getName()
+                ))
                 .toList();
 
         return new org.springframework.security.core.userdetails.User(

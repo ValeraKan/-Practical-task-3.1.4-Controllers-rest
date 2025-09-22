@@ -40,7 +40,9 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public UserDTO saveUser(UserDTO userDTO) {
-        if (userDTO.getPassword() == null || userDTO.getPassword().isEmpty()) {
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword())); // ✅ правильно
+        } else {
             throw new IllegalArgumentException("Password must not be empty");
         }
 

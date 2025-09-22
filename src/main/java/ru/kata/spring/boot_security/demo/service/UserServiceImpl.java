@@ -25,10 +25,10 @@ public class UserServiceImpl implements UserService {
     public UserDTO getUserDTOByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден: " + email));
+        user.getRoles().size();
         return convertToDTO(user);
     }
 
-    // приватный маппер
     private UserDTO convertToDTO(User user) {
         List<String> roles = user.getRoles().stream()
                 .map(r -> r.getName())
