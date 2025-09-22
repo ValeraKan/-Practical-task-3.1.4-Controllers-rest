@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDTO getUserByEmail(String email) {
+    public UserDTO getUserDTOByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден: " + email));
         return convertToDTO(user);
@@ -33,6 +33,6 @@ public class UserServiceImpl implements UserService {
         List<String> roles = user.getRoles().stream()
                 .map(r -> r.getName())
                 .toList();
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), roles);
+        return new UserDTO(user.getId(), user.getName(), user.getEmail(), roles,null);
     }
 }

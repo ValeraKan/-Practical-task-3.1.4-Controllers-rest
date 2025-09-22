@@ -37,34 +37,54 @@ public class AdminServiceImpl implements AdminService {
                 .map(this::convertToDTO)
                 .toList();
     }
-
     @Override
     @Transactional
     public UserDTO saveUser(UserDTO userDTO) {
-        User user = convertToEntity(userDTO);
-        if (userDTO.getEmail() != null && !userDTO.getEmail().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDTO.getEmail()));
+        if (userDTO.getPassword() == null || userDTO.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password must not be empty");
         }
+
+        User user = convertToEntity(userDTO);
+        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            Set<Role> roles = userDTO.getRoles().stream()
+                    .map(roleService::findRoleByName)
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
+        }
+        if (userDTO.getId() != null) {
+            user.setId(userDTO.getId());
+        }
+
         userRepository.save(user);
         return convertToDTO(user);
     }
 
+
+
     @Override
     @Transactional
     public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User existingUser = userRepository.findById(id).orElseThrow();
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
+
         existingUser.setName(userDTO.getName());
         existingUser.setEmail(userDTO.getEmail());
 
-        Set<Role> roles = userDTO.getRoles().stream()
-                .map(roleService::findRoleByName)
-                .collect(Collectors.toSet());
+        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            Set<Role> roles = userDTO.getRoles().stream()
+                    .map(roleService::findRoleByName)
+                    .collect(Collectors.toSet());
+            existingUser.setRoles(roles);
+        }
 
-        existingUser.setRoles(roles);
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        }
+
         userRepository.save(existingUser);
-
         return convertToDTO(existingUser);
     }
+
 
     @Override
     @Transactional
@@ -80,18 +100,27 @@ public class AdminServiceImpl implements AdminService {
                 .orElse(null);
     }
 
-    // 🔽 Приватные мапперы
     private UserDTO convertToDTO(User user) {
-        List<String> roleNames = user.getRoles().stream()
+        List<String> roleNames = user.getRoles() != null
+                ? user.getRoles().stream()
                 .map(Role::getName)
-                .toList();
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), roleNames);
+                .toList()
+                : List.of();
+        return new UserDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                roleNames,
+                null
+        );
     }
 
     private User convertToEntity(UserDTO dto) {
         User user = new User();
+        user.setId(dto.getId());
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
         return user;
     }
 }

@@ -22,6 +22,6 @@ public class UserController {
 
     @GetMapping("/profile")
     public UserDTO getUserProfile(@AuthenticationPrincipal UserDetails currentUser) {
-        return userService.getUserByEmail(currentUser.getUsername());
+        return userService.getUserDTOByEmail(currentUser.getUsername());
     }
 }
