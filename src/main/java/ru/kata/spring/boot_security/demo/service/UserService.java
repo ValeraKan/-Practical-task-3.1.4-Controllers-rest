@@ -1,9 +1,7 @@
 package ru.kata.spring.boot_security.demo.service;
 
-
-import ru.kata.spring.boot_security.demo.entity.User;
+import ru.kata.spring.boot_security.demo.dto.UserDTO;
 
 public interface UserService {
-
-    User getUserByEmail(String email);
+    UserDTO getUserByEmail(String email);
 }

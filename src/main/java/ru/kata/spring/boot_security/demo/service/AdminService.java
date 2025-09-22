@@ -1,17 +1,18 @@
 package ru.kata.spring.boot_security.demo.service;
 
-
-import ru.kata.spring.boot_security.demo.entity.User;
+import ru.kata.spring.boot_security.demo.dto.UserDTO;
 
 import java.util.List;
 
 public interface AdminService {
 
-    List<User> getAllUsers();
+    List<UserDTO> getAllUsers();
 
-    void saveUser(User user);
+    UserDTO saveUser(UserDTO userDTO);
 
-    User getUser(Long id);
+    UserDTO updateUser(Long id, UserDTO userDTO);
+
+    UserDTO getUser(Long id);
 
     void deleteUser(Long id);
 }

@@ -22,55 +22,30 @@ import java.util.stream.Collectors;
 public class AdminController {
 
     private final AdminService adminService;
-    private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminController(AdminService adminService, RoleService roleService, PasswordEncoder passwordEncoder) {
+    public AdminController(AdminService adminService) {
         this.adminService = adminService;
-        this.roleService = roleService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/users")
     public List<UserDTO> getAllUsers() {
-        return adminService.getAllUsers().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        return adminService.getAllUsers();
     }
 
-    @GetMapping("/roles")
-    public List<RoleDTO> getAllRoles() {
-        return roleService.getAllRoles().stream()
-                .map(r -> new RoleDTO(r.getId(), r.getName()))
-                .collect(Collectors.toList());
+    @GetMapping("/users/{id}")
+    public UserDTO getUser(@PathVariable Long id) {
+        return adminService.getUser(id);
     }
 
     @PostMapping("/users")
     public UserDTO saveUser(@RequestBody UserDTO userDTO) {
-        User user = convertToEntity(userDTO);
-        if (userDTO.getEmail() != null && !userDTO.getEmail().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(user.getEmail())); // если нужно закодировать пароль
-        }
-        adminService.saveUser(user);
-        return convertToDTO(user);
+        return adminService.saveUser(userDTO);
     }
 
     @PutMapping("/users/{id}")
     public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        User existingUser = adminService.getUser(id);
-        if (existingUser != null) {
-            existingUser.setName(userDTO.getName());
-            existingUser.setEmail(userDTO.getEmail());
-            // Обновление ролей
-            Set<Role> roles = userDTO.getRoles().stream()
-                    .map(roleService::findRoleByName) // нужен метод поиска роли по имени
-                    .collect(Collectors.toSet());
-            existingUser.setRoles(roles);
-            adminService.saveUser(existingUser);
-            return convertToDTO(existingUser);
-        }
-        return null;
+        return adminService.updateUser(id, userDTO);
     }
 
     @DeleteMapping("/users/{id}")
@@ -81,37 +56,11 @@ public class AdminController {
                     "status", "success",
                     "message", "User with id " + id + " successfully deleted"
             ));
-        } catch (EmptyResultDataAccessException e) { // если юзер не найден
+        } catch (EmptyResultDataAccessException e) {
             return ResponseEntity.status(404).body(Map.of(
                     "status", "error",
                     "message", "User with id " + id + " not found"
             ));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                    "status", "error",
-                    "message", "Error deleting user"
-            ));
         }
-    }
-
-    @GetMapping("/users/{id}")
-    public UserDTO getUser(@PathVariable Long id) {
-        User user = adminService.getUser(id);
-        return user != null ? convertToDTO(user) : null;
-    }
-
-    private UserDTO convertToDTO(User user) {
-        List<String> roleNames = user.getRoles().stream()
-                .map(Role::getName)
-                .toList();
-        return new UserDTO(user.getId(), user.getName(), user.getEmail(), roleNames);
-    }
-
-    private User convertToEntity(UserDTO dto) {
-        User user = new User();
-        user.setName(dto.getName());
-        user.setEmail(dto.getEmail());
-        // роли будут назначены в updateUser
-        return user;
     }
 }
