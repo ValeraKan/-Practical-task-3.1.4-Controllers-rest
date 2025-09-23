@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.dto.LoginRequest;
+import ru.kata.spring.boot_security.demo.dto.LoginResponse;
+import ru.kata.spring.boot_security.demo.service.LoginService;
 
 import java.util.Map;
 
@@ -18,43 +20,25 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class LoginRestController {
 
-    private final AuthenticationManager authenticationManager;
+    private final LoginService loginService;
 
-    public LoginRestController(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+    public LoginRestController(LoginService loginService) {
+        this.loginService = loginService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
-        try {
-            Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-            );
-            SecurityContextHolder.getContext().setAuthentication(auth);
-            session.setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    SecurityContextHolder.getContext()
-            );
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest,
+                                               HttpSession session) {
+        LoginResponse response = loginService.login(loginRequest, session);
 
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "roles", auth.getAuthorities().stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .toList()
-            ));
-
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(401).body(Map.of(
-                    "status", "error",
-                    "message", "Invalid credentials"
-            ));
+        if ("error".equals(response.getStatus())) {
+            return ResponseEntity.status(401).body(response);
         }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate();
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok(Map.of("status", "logged out"));
+    public ResponseEntity<LoginResponse> logout(HttpSession session) {
+        return ResponseEntity.ok(loginService.logout(session));
     }
 }
